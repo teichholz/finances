@@ -3,16 +3,11 @@ import { StyleSheet, Button, FlatList, ListRenderItemInfo, TextInput, SafeAreaVi
 
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
+import { TransactionDialog, Transaction, Transactions, TransactionKind } from '../components/Transaction';
 import { RootTabScreenProps } from '../types';
 import { Dialog, } from '@rneui/themed';
 import { openDatabase } from 'expo-sqlite';
 
-type Transaction = {
-  name: string,
-  amount: number
-};
-
-type Transactions = Transaction[];
 
 const data: Transactions = [
   { name: "Schuhe",
@@ -29,40 +24,44 @@ const Item = (transaction: ListRenderItemInfo<Transaction>) => (
 );
 
 
-
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>) {
-  const [visible, setVisible] = useState(false);
-  const [amount, setAmount] = useState("0");
+  const [visibleIn, setVisibleIn] = useState(false);
+  const [visibleOut, setVisibleOut] = useState(false);
+  const ts: Transactions = [];
+  const [transactions, setTransactions] = useState(ts);
 
-  const toggleDialog = () => {
-    setVisible(!visible);
+  const tkinds: TransactionKind[] = ["In", "Out"]
+
+  const toggleDialogIn = () => {
+    setVisibleIn(!visibleIn);
+  };
+
+  const toggleDialogOut = () => {
+    setVisibleOut(!visibleOut);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Finanzübersicht</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <FlatList data={data} renderItem={Item}/>
+      <FlatList data={transactions} renderItem={Item}/>
       <View>
         <View style={styles.fixToText}>
-          <Button title="+" onPress={toggleDialog} />
-          <Button title="-" onPress={toggleDialog} />
+          <Button title="+" onPress={toggleDialogIn} />
+          <Button title="-" onPress={toggleDialogOut} />
         </View>
       </View>
-      <Dialog
-        isVisible={visible}
-        onBackdropPress={toggleDialog}
-      >
-        <Dialog.Title title="Ausgabe hinzufügen"/>
-        <Text>Dialog body text. Add relevant information here.</Text>
-        <TextInput 
-           style={styles.textInput}
-           keyboardType='numeric'
-           onChangeText={setAmount}
-           value={amount}
-           maxLength={10}  //setting limit of input
-        />
-      </Dialog>
+      <TransactionDialog 
+        isVisible={visibleIn} 
+        type="In" 
+        onAdd={(transaction) => setTransactions([...transactions, transaction])} 
+        onCancel={() => setVisibleIn(false)} />
+      <TransactionDialog 
+        isVisible={visibleOut} 
+        type="Out" 
+        onAdd={(transaction) => setTransactions([...transactions, transaction])} 
+        onCancel={() => setVisibleOut(false)} />
+
       <EditScreenInfo path="/screens/TabOneScreen.tsx" />
     </View>
   );
