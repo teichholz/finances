@@ -13,8 +13,12 @@ declare global {
   }
 }
 
+
+/**
+ * Param list for the root navigator
+ */
 export type RootStackParamList = {
-  Root: NavigatorScreenParams<RootTabParamList> | undefined;
+  Root: NavigatorScreenParams<MoneyStackParamList> | undefined;
   Modal: undefined;
   NotFound: undefined;
 };
@@ -24,12 +28,15 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
   Screen
 >;
 
-export type RootTabParamList = {
-  TabOne: undefined;
-  TabTwo: undefined;
+/**
+ * Param list for all user relevant routes
+ */
+export type MoneyStackParamList = {
+  Overview: undefined;
+  TransactionCreation: { kind: "In" | "Out" };
 };
 
-export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<
-  BottomTabScreenProps<RootTabParamList, Screen>,
-  NativeStackScreenProps<RootStackParamList>
->;
+export type MoneyStackScreenProps<Screen extends keyof MoneyStackParamList> = NativeStackScreenProps<MoneyStackParamList, Screen>;
+
+export type OverviewScreenProps = MoneyStackScreenProps<'Overview'>
+export type TransactionScreenProps = MoneyStackScreenProps<'TransactionCreation'>

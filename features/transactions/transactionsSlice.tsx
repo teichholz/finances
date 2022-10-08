@@ -4,6 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 export type Transaction = {
   name: string,
   amount: number,
+  date: Date
 };
 
 export type TransactionsState = {

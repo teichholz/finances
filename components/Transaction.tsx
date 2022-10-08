@@ -1,27 +1,28 @@
-import React, { useState,  } from 'react';
-import { StyleSheet,TextInput, View, Text } from 'react-native';
+import React, { useState, } from 'react';
+import { StyleSheet, TextInput, View, Text, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Dialog, Button, OverlayProps, Input } from '@rneui/themed';
-import {Transaction} from '../features/transactions/transactionsSlice'
+import { Transaction } from '../features/transactions/transactionsSlice'
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Kind = "In" | "Out";
 
 type MyProps = {
-  onAdd : (transaction : Transaction) => void,
+  onAdd: (transaction: Transaction) => void,
   onCancel: () => void,
   type: Kind
 }
 
-export type TransactionProps = MyProps & OverlayProps 
+export type TransactionProps = MyProps & OverlayProps
 
 function kindToFactor(kind: Kind) {
   return kind == "In" ? 1 : -1;
 }
 
-export function mkTransaction(name: string, amount: number, type: Kind ): Transaction {
-  return { name, amount: amount * kindToFactor(type) };
-} 
+export function mkTransaction(name: string, amount: number, date: Date, type: Kind): Transaction {
+  return { name, amount: amount * kindToFactor(type), date };
+}
 
-export function TransactionDialog(props : TransactionProps) {
+export function TransactionDialog(props: TransactionProps) {
   const ttl = props.type == "In" ? "Einnahme" : "Ausgabe";
   const [onAdd, onCancel] = [props.onAdd, props.onCancel]
   const oProps: OverlayProps = props;
@@ -29,43 +30,67 @@ export function TransactionDialog(props : TransactionProps) {
   const [amount, setAmount] = useState("");
   const [name, setName] = useState("");
 
-  function resetState() {
-    setAmount(""); 
-    setName("");
-  } 
+  // DateTimePicker
+  const [date, setDate] = useState(new Date());
+  const [mode, setMode] = useState('date');
+  const [show, setShow] = useState(true);
 
-  return <Dialog onBackdropPress={onCancel} {...oProps} >
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate;
+    setShow(false);
+    setDate(currentDate);
+  };
+
+  function resetState() {
+    setAmount("");
+    setName("");
+  }
+
+  return <Dialog  {...oProps} >
 
     <Dialog.Title titleStyle={styles.title} title={`${ttl} hinzufügen`} />
 
-    <Input 
-      label="Name"
-      placeholder="Name"
-      style={styles.textInput}
-      keyboardType='default'
-      onChangeText={setName}
-      value={name}
-      errorMessage=""
-      />
+      <View style={{ alignItems: "flex-start" }}>
 
-    <Input 
-      label="Betrag"
-      placeholder="Betrag"
-      style={styles.textInput}
-      keyboardType='numeric'
-      onChangeText={setAmount}
-      value={amount}
-      errorMessage=""
-      />
+        <Text>Name</Text>
+        <Input
+          placeholder="Name"
+          style={styles.textInput}
+          keyboardType='default'
+          onChangeText={setName}
+          value={name}
+          errorMessage=""
+        />
 
-    <View style={styles.hor}>
-      <Dialog.Button 
-        title="Hinzufügen" 
-        onPress={_ => {onAdd(mkTransaction(name, parseInt(amount), props.type)); resetState();}} />
-      <Dialog.Button 
-        title="Abbrechen" 
-        onPress={_ => {onCancel(); resetState();}} />
-    </View>
+        <Text>Betrag</Text>
+        <Input
+          placeholder="Betrag"
+          style={styles.textInput}
+          keyboardType='numeric'
+          onChangeText={setAmount}
+          value={amount}
+          errorMessage=""
+        />
+
+        <Text>Datum</Text>
+        <DateTimePicker
+          testID="dateTimePicker"
+          style={styles.textInput}
+          value={date}
+          mode="date"
+          is24Hour={true}
+          onChange={onChange}
+        />
+
+        <View style={styles.hor}>
+          <Dialog.Button
+            title="Hinzufügen"
+            onPress={_ => { onAdd(mkTransaction(name, parseInt(amount), date, props.type)); resetState(); }} />
+          <Dialog.Button
+            title="Abbrechen"
+            onPress={_ => { onCancel(); resetState(); }} />
+        </View>
+      </View>
   </Dialog>
 }
 
@@ -73,6 +98,7 @@ export function TransactionDialog(props : TransactionProps) {
 const styles = StyleSheet.create({
   title: {
     fontSize: 20,
+    marginBottom: 30,
     fontWeight: 'bold',
     alignSelf: 'center',
   },
@@ -84,11 +110,12 @@ const styles = StyleSheet.create({
   textInput: {
     height: 40,
     marginTop: 12,
+    width: "60%",
     // borderWidth: 1,
     padding: 10,
   },
   hor: {
-    flexDirection: 'row', 
+    flexDirection: 'row',
     justifyContent: 'space-between'
   }
 });

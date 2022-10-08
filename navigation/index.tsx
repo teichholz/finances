@@ -8,7 +8,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { ColorSchemeName, Pressable, View, TouchableOpacity, Modal, Button, Text, Dimensions, StatusBar,  } from 'react-native';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { ColorSchemeName, Pressable, View, TouchableOpacity, Modal, Button, Text, Dimensions, StatusBar, } from 'react-native';
 import { Icon, Overlay } from '@rneui/themed';
 
 import Colors from '../constants/Colors';
@@ -21,6 +22,7 @@ import LinkingConfiguration from './LinkingConfiguration';
 
 import { useDispatch } from 'react-redux'
 import { clear } from '../features/transactions/transactionsSlice'
+import TransactionCreation from '../screens/TransactionCreation';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -50,13 +52,9 @@ function RootNavigator() {
   );
 }
 
-/**
- * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
- * https://reactnavigation.org/docs/bottom-tab-navigator
- */
-
 export type Params = {
-  Transaktionen: undefined;
+  Overview: undefined,
+  TransactionCreation: undefined;
 };
 
 const Stack = createNativeStackNavigator<Params>();
@@ -67,16 +65,17 @@ function BottomTabNavigator() {
   const dispatch = useDispatch()
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName="Overview">
       <Stack.Screen
-        name="Transaktionen"
+        name="Overview"
         component={TabOneScreen}
         options={{
+          title: "Transanktionsübersicht",
           headerRight: (props) => (
             <View>
               <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
                 <TouchableOpacity style={{ margin: 4 }}><Icon name='search' /></TouchableOpacity>
-                <TouchableOpacity style={{ margin: 4 }}  onPress={() => setSettingsVisible(true)} ><Icon name='more-vert'/></TouchableOpacity>
+                <TouchableOpacity style={{ margin: 4 }} onPress={() => setSettingsVisible(true)} ><Icon name='more-vert' /></TouchableOpacity>
               </View>
               <Overlay
                 isVisible={settingsVisible}
@@ -88,6 +87,11 @@ function BottomTabNavigator() {
             </View>
           ),
         }}
+      />
+      <Stack.Screen
+        name="TransactionCreation"
+        component={TransactionCreation}
+        options={{title: "Transaktion erstellen"}}
       />
     </Stack.Navigator>
   );
