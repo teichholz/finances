@@ -6,6 +6,7 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Transaction } from './features/transactions/transactionsSlice';
 
 declare global {
   namespace ReactNavigation {
@@ -28,12 +29,14 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
   Screen
 >;
 
+export type TransactionCreationKind = "In" | "Out" | "Edit"
+
 /**
  * Param list for all user relevant routes
  */
 export type MoneyStackParamList = {
   Overview: undefined;
-  TransactionCreation: { kind: "In" | "Out" };
+  TransactionCreation: { kind: TransactionCreationKind, transactionInEdit: (Transaction & { index: number }) | undefined };
 };
 
 export type MoneyStackScreenProps<Screen extends keyof MoneyStackParamList> = NativeStackScreenProps<MoneyStackParamList, Screen>;

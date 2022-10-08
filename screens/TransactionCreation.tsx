@@ -3,52 +3,43 @@ import { StyleSheet, TextInput, View, Text } from 'react-native';
 import { Dialog, Button, OverlayProps, Input } from '@rneui/themed';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { Transaction, add } from '../features/transactions/transactionsSlice'
+import { Transaction, add, remove } from '../features/transactions/transactionsSlice'
 import { useDispatch } from 'react-redux'
-import { TransactionScreenProps } from '../types';
+import { TransactionCreationKind, TransactionScreenProps } from '../types';
 import { DismissKeyboardView, HideKeyboardOnPress } from '../components/DismissKeyboard';
 
-type Kind = "In" | "Out";
-
-type MyProps = {
-  onCancel: () => void | undefined,
-  type: Kind
+function kindToFactor(kind: TransactionCreationKind) {
+  return kind == "Out" ? -1 : 1;
 }
 
-export type TransactionProps = MyProps & OverlayProps
-
-function kindToFactor(kind: Kind) {
-  return kind == "In" ? 1 : -1;
-}
-
-export function mkTransaction(name: string, amount: number, date: Date, type: Kind): Transaction {
-  return { name, amount: amount * kindToFactor(type), date };
+export function mkTransaction(name: string, amount: number, date: Date, type: TransactionCreationKind): Transaction {
+  return { name, amount: amount * kindToFactor(type), timestamp: date.getTime() };
 }
 
 export default function TransactionCreation({ route, navigation }: TransactionScreenProps) {
   const dispatch = useDispatch()
-  const [amount, setAmount] = useState("");
-  const [name, setName] = useState("");
 
-  // DateTimePicker
-  const [date, setDate] = useState(new Date());
-  const [mode, setMode] = useState('date');
-  const [show, setShow] = useState(true);
+  const editMode = route.params.kind === "Edit"
+  const transaction = route.params.transactionInEdit || mkTransaction("", 0, new Date(), route.params.kind)
 
-  const onChange = (event, selectedDate) => {
+  const [amount, setAmount] = useState(transaction.amount.toString());
+  const [name, setName] = useState(transaction.name);
+  const [date, setDate] = useState(new Date(transaction.timestamp));
+
+  const onChange = (_: any, selectedDate: any) => {
     const currentDate = selectedDate;
-    setShow(false);
     setDate(currentDate);
   };
 
   function resetState() {
     setAmount("");
     setName("");
+    setDate(new Date())
   }
 
   return (
     <HideKeyboardOnPress>
-      <View style={{ alignItems: "center", flex:1  }}>
+      <View style={{ alignItems: "center", flex: 1 }}>
         <View style={{ width: "80%", marginTop: 40 }}>
 
           <Text>Name</Text>
@@ -78,13 +69,22 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
               mode="date"
               is24Hour={true}
               onChange={onChange}
-              />
+            />
           </View>
 
           <View style={styles.hor}>
             <Dialog.Button
-              title="Hinzufügen"
-              onPress={_ => { dispatch(add(mkTransaction(name, parseInt(amount), date, route.params.kind))); resetState(); }} />
+              title={editMode ? "Bearbeiten" : "Hinzufügen"}
+              onPress={_ => {
+                const transaction = mkTransaction(name, parseInt(amount), date, route.params.kind)
+                if (editMode) {
+                  dispatch(remove(route.params.transactionInEdit!.index))
+                  dispatch(add(transaction))
+                } else {
+                  dispatch(add(transaction));
+                }
+                resetState();
+              }} />
             <Dialog.Button
               title="Abbrechen"
               onPress={_ => { resetState(); navigation.goBack() }} />
