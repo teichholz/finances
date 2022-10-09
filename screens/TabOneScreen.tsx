@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, ListRenderItemInfo, TextInput, SafeAreaView, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, ListRenderItemInfo, TextInput, SafeAreaView, Keyboard, TouchableWithoutFeedback, TouchableOpacity, ScrollView } from 'react-native';
 
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
@@ -14,19 +14,24 @@ import { openDatabase } from 'expo-sqlite';
 
 import { useSelector, useDispatch } from 'react-redux'
 import { add, remove } from '../features/transactions/transactionsSlice'
+import { RootState } from '../store';
 
 
 
 
 export default function TabOneScreen({ route, navigation }: OverviewScreenProps) {
   const dispatch = useDispatch()
-  const transactions = useSelector((state) => state.transactions.value)
+  const transactions = useSelector((state: RootState) => state.transactions.value)
 
   const sum = transactions.map(t => t.amount).reduce((sum, amnt) => sum + amnt, 0)
 
   return (
     <View style={styles.container}>
-      <View style={{ width: "100%" }}>
+      <View>
+        {transactions.length > 0 && <Text>{new Date(transactions[0].timestamp).toString()}</Text>}
+      </View>
+
+      <ScrollView style={{ width: "100%" }}>
         <FlatList
           data={transactions}
           renderItem={(item: ListRenderItemInfo<Transaction>) => {
@@ -52,10 +57,10 @@ export default function TabOneScreen({ route, navigation }: OverviewScreenProps)
               </ListItem.Swipeable>
             )
           }} />
-      </View>
+      </ScrollView>
 
 
-      <View>
+      <View style={{alignItems: "center"}}>
         <Button
           title={`${sum} €`}
           titleStyle={{ fontWeight: '700' }}
@@ -98,7 +103,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "column",
-    alignItems: 'center',
     justifyContent: 'space-between',
   },
   title: {

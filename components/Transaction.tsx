@@ -18,10 +18,6 @@ function kindToFactor(kind: Kind) {
   return kind == "In" ? 1 : -1;
 }
 
-export function mkTransaction(name: string, amount: number, date: Date, type: Kind): Transaction {
-  return { name, amount: amount * kindToFactor(type), date };
-}
-
 export function TransactionDialog(props: TransactionProps) {
   const ttl = props.type == "In" ? "Einnahme" : "Ausgabe";
   const [onAdd, onCancel] = [props.onAdd, props.onCancel]

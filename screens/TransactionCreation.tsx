@@ -27,8 +27,7 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
   const [date, setDate] = useState(new Date(transaction.timestamp));
 
   const onChange = (_: any, selectedDate: any) => {
-    const currentDate = selectedDate;
-    setDate(currentDate);
+    setDate(selectedDate);
   };
 
   function resetState() {

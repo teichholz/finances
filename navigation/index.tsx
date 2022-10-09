@@ -18,7 +18,7 @@ import { RootStackParamList } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
 import { useDispatch } from 'react-redux'
-import { clear } from '../features/transactions/transactionsSlice'
+import { clear, fill } from '../features/transactions/transactionsSlice'
 import TransactionCreation from '../screens/TransactionCreation';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
@@ -80,6 +80,7 @@ function BottomTabNavigator() {
                 overlayStyle={{ position: 'absolute', top: 100, right: 5 }}
               >
                 <Button title="clear" onPress={() => dispatch(clear())}></Button>
+                <Button title="fill" onPress={() => dispatch(fill())}></Button>
               </Overlay>
             </View>
           ),

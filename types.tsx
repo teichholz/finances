@@ -36,7 +36,7 @@ export type TransactionCreationKind = "In" | "Out" | "Edit"
  */
 export type MoneyStackParamList = {
   Overview: undefined;
-  TransactionCreation: { kind: TransactionCreationKind, transactionInEdit: (Transaction & { index: number }) | undefined };
+  TransactionCreation: { kind: TransactionCreationKind, transactionInEdit?: (Transaction & { index: number })};
 };
 
 export type MoneyStackScreenProps<Screen extends keyof MoneyStackParamList> = NativeStackScreenProps<MoneyStackParamList, Screen>;
