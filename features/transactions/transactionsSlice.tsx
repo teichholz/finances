@@ -1,12 +1,20 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { mkTransaction } from '../../screens/TransactionCreation';
+import { TransactionCreationKind } from '../../types';
 
 export type Transaction = {
   name: string,
   amount: number,
   timestamp: number
 };
+
+export function mkTransaction(name: string, amount: number, date: Date, type: TransactionCreationKind): Transaction {
+  return { name, amount: amount * kindToFactor(type), timestamp: date.getTime() };
+}
+
+function kindToFactor(kind: TransactionCreationKind) {
+  return kind == "Out" ? -1 : 1;
+}
 
 export type TransactionsState = {
   value: Transactions
@@ -26,8 +34,9 @@ export const transactionsSlice = createSlice({
       const ts: Transaction[] = [...state.value];
       let index = ts.length;
       for (let i = 0; i < ts.length; ++i) {
-        if (action.payload.timestamp < ts[i].timestamp) {
+        if (action.payload.timestamp > ts[i].timestamp) {
           index = i;
+          break;
         }
       }
       ts.splice(index, 0, action.payload)

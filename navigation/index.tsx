@@ -13,13 +13,13 @@ import { Icon, Overlay } from '@rneui/themed';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
 import { RootStackParamList } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
 import { useDispatch } from 'react-redux'
 import { clear, fill } from '../features/transactions/transactionsSlice'
 import TransactionCreation from '../screens/TransactionCreation';
+import TransactionOverview from '../screens/TransactionOverview';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -65,7 +65,7 @@ function BottomTabNavigator() {
     <Stack.Navigator initialRouteName="Overview">
       <Stack.Screen
         name="Overview"
-        component={TabOneScreen}
+        component={TransactionOverview}
         options={{
           title: "Transanktionsübersicht",
           headerRight: (props) => (

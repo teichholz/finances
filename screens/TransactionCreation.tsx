@@ -3,18 +3,11 @@ import { StyleSheet, TextInput, View, Text } from 'react-native';
 import { Dialog, Button, OverlayProps, Input } from '@rneui/themed';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { Transaction, add, remove } from '../features/transactions/transactionsSlice'
+import { add, remove, mkTransaction } from '../features/transactions/transactionsSlice'
 import { useDispatch } from 'react-redux'
-import { TransactionCreationKind, TransactionScreenProps } from '../types';
-import { DismissKeyboardView, HideKeyboardOnPress } from '../components/DismissKeyboard';
+import { TransactionScreenProps } from '../types';
+import { HideKeyboardOnPress } from '../components/DismissKeyboard';
 
-function kindToFactor(kind: TransactionCreationKind) {
-  return kind == "Out" ? -1 : 1;
-}
-
-export function mkTransaction(name: string, amount: number, date: Date, type: TransactionCreationKind): Transaction {
-  return { name, amount: amount * kindToFactor(type), timestamp: date.getTime() };
-}
 
 export default function TransactionCreation({ route, navigation }: TransactionScreenProps) {
   const dispatch = useDispatch()
@@ -73,7 +66,7 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
 
           <View style={styles.hor}>
             <Dialog.Button
-              title={editMode ? "Bearbeiten" : "Hinzufügen"}
+              title={editMode ? "Speichern" : "Hinzufügen"}
               onPress={_ => {
                 const transaction = mkTransaction(name, parseInt(amount), date, route.params.kind)
                 if (editMode) {
