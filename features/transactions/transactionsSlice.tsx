@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { TransactionCreationKind } from '../../types';
 
+
 export type Transaction = {
   name: string,
   amount: number,
@@ -22,9 +23,12 @@ export type TransactionsState = {
 
 export type Transactions = Transaction[];
 
+
 const initialState: TransactionsState = {
   value: [],
 }
+
+
 
 export const transactionsSlice = createSlice({
   name: 'transactions',

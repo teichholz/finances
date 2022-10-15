@@ -5,16 +5,33 @@ import Colors from '../constants/Colors'
 import { Transaction } from '../features/transactions/transactionsSlice'
 import { OverviewScreenProps, TransactionScreenProps } from '../types';
 import { Button, FAB, ListItem } from '@rneui/themed';
-import { openDatabase } from 'expo-sqlite';
 
 import { useSelector, useDispatch } from 'react-redux'
 import { remove } from '../features/transactions/transactionsSlice'
 import { RootState } from '../store';
 import { useCallback, useEffect, useState } from 'react';
 
+import * as SQLite from 'expo-sqlite';
+const db = SQLite.openDatabase("db.db")
+
 type ViewableItems = { viewableItems: Array<ViewToken>; changed: Array<ViewToken> }
 
+
+
 export default function TransactionOverview({ route, navigation }: OverviewScreenProps) {
+  useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `select * from transactios;`,
+        undefined,
+        (_: SQLite.SQLTransaction, resultSet: SQLite.SQLResultSet) => {
+          const rows = resultSet.rows._array;
+          console.log(rows);
+        }
+      );
+    });
+  }, []);
+
   const dispatch = useDispatch()
   const transactions = useSelector((state: RootState) => state.transactions.value)
 

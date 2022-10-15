@@ -3,11 +3,14 @@ import { StyleSheet, TextInput, View, Text } from 'react-native';
 import { Dialog, Button, OverlayProps, Input } from '@rneui/themed';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { add, remove, mkTransaction } from '../features/transactions/transactionsSlice'
+import { add, remove, mkTransaction, Transaction } from '../features/transactions/transactionsSlice'
 import { useDispatch } from 'react-redux'
 import { TransactionScreenProps } from '../types';
 import { HideKeyboardOnPress } from '../components/DismissKeyboard';
 
+import * as SQLite from 'expo-sqlite';
+
+const db = SQLite.openDatabase("db.db")
 
 export default function TransactionCreation({ route, navigation }: TransactionScreenProps) {
   const dispatch = useDispatch()
@@ -23,11 +26,27 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
     setDate(selectedDate);
   };
 
+  const addTransaction = (transaction: Transaction) => {
+    const transactionAsArray = [transaction.name, transaction.amount, transaction.timestamp];
+    db.transaction(
+      (tx) => {
+        tx.executeSql("insert into transactions (name, amount, timestamp) values (?, ?, ?)", transactionAsArray,
+          (_: any, _: any) => {
+            dispatch(add(transaction))
+          });
+      },
+    );
+  };
+
+  const reomveTransaction = (index: number) => {
+    dispatch(remove(index))
+  };
+
   function resetState() {
     setAmount("");
     setName("");
     setDate(new Date())
-  }
+  };
 
   return (
     <HideKeyboardOnPress>
@@ -70,10 +89,10 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
               onPress={_ => {
                 const transaction = mkTransaction(name, parseInt(amount), date, route.params.kind)
                 if (editMode) {
-                  dispatch(remove(route.params.transactionInEdit!.index))
-                  dispatch(add(transaction))
+                  reomveTransaction(route.params.transactionInEdit!.index)
+                  addTransaction(transaction)
                 } else {
-                  dispatch(add(transaction));
+                  addTransaction(transaction)
                 }
                 resetState();
               }} />
