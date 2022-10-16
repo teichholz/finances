@@ -4,6 +4,7 @@ import { TransactionCreationKind } from '../../types';
 
 
 export type Transaction = {
+  id?: number, 
   name: string,
   amount: number,
   timestamp: number

@@ -9,6 +9,7 @@ import { TransactionScreenProps } from '../types';
 import { HideKeyboardOnPress } from '../components/DismissKeyboard';
 
 import * as SQLite from 'expo-sqlite';
+import { css } from '../constants/Styles';
 
 const db = SQLite.openDatabase("db.db")
 
@@ -31,12 +32,14 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
     db.transaction(
       (tx) => {
         tx.executeSql("insert into transactions (name, amount, timestamp) values (?, ?, ?)", transactionAsArray,
-          (_: any, _: any) => {
-            dispatch(add(transaction))
+          (unused: any, rs: SQLite.SQLResultSet) => {
+            transaction.id = rs.insertId;
+            dispatch(add(transaction));
           });
       },
     );
   };
+
 
   const reomveTransaction = (index: number) => {
     dispatch(remove(index))
@@ -50,7 +53,7 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
 
   return (
     <HideKeyboardOnPress>
-      <View style={{ alignItems: "center", flex: 1 }}>
+      <View style={[css.styles.flex1, css.styles.alignItemsCenter]}>
         <View style={{ width: "80%", marginTop: 40 }}>
 
           <Text>Name</Text>
@@ -76,14 +79,13 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
             <DateTimePicker
               testID="dateTimePicker"
               value={date}
-              style={styles.dateInput}
               mode="date"
               is24Hour={true}
               onChange={onChange}
             />
           </View>
 
-          <View style={styles.hor}>
+          <View style={css.styles.flexRowSpaceBetween}>
             <Dialog.Button
               title={editMode ? "Speichern" : "Hinzufügen"}
               onPress={_ => {
@@ -107,15 +109,6 @@ export default function TransactionCreation({ route, navigation }: TransactionSc
 
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 20,
-    marginBottom: 30,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-  },
-  label: {
-    alignSelf: "flex-end",
-  },
   textInput: {
     height: 40,
     margin: 12,
@@ -123,16 +116,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
-  dateInput: {
-  },
-  row: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  hor: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  }
 });
 

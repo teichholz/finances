@@ -2,7 +2,7 @@ import { StyleSheet, FlatList, ListRenderItemInfo, TouchableWithoutFeedback, Vie
 
 import { Text, View } from '../components/Themed';
 import Colors from '../constants/Colors'
-import { Transaction } from '../features/transactions/transactionsSlice'
+import { add, Transaction } from '../features/transactions/transactionsSlice'
 import { OverviewScreenProps, TransactionScreenProps } from '../types';
 import { Button, FAB, ListItem } from '@rneui/themed';
 
@@ -12,68 +12,87 @@ import { RootState } from '../store';
 import { useCallback, useEffect, useState } from 'react';
 
 import * as SQLite from 'expo-sqlite';
+import useDbTransactions from '../hooks/useDbTransactions';
+import { css } from '../constants/Styles';
 const db = SQLite.openDatabase("db.db")
 
 type ViewableItems = { viewableItems: Array<ViewToken>; changed: Array<ViewToken> }
 
 
-
 export default function TransactionOverview({ route, navigation }: OverviewScreenProps) {
-  useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `select * from transactios;`,
-        undefined,
-        (_: SQLite.SQLTransaction, resultSet: SQLite.SQLResultSet) => {
-          const rows = resultSet.rows._array;
-          console.log(rows);
-        }
-      );
-    });
-  }, []);
-
   const dispatch = useDispatch()
   const transactions = useSelector((state: RootState) => state.transactions.value)
+  const transactionsLoaded = useDbTransactions();
 
   const [topMostIndex, setTopMostIndex] = useState<number>(0)
   const [sum, setSum] = useState<number>(0);
   const [topMostTimestamp, setTopMostTimestamp] = useState<number>(0);
 
+  const calculateAndSetTransactionsSum = (ts: Transaction[]) => {
+    const sumTs = (ts: Transaction[]) => ts.map(t => t.amount).reduce((sum, amnt) => sum + amnt, 0);
+    setSum(sumTs(ts));
+  };
+
+  const deleteTransaction = (item: ListRenderItemInfo<Transaction>) => {
+    const transaction = item.item;
+    const indexInList = item.index;
+    if (transaction.id) {
+      db.transaction(
+        (tx) => {
+          tx.executeSql("delete from transactions where id = ?", [transaction.id!],
+            (unused1: any, unused2: any) => {
+              dispatch(remove(indexInList))
+            },
+            (transaction: SQLite.SQLTransaction, error: SQLite.SQLError) => {
+              console.log(error.message);
+              return true;
+            });
+        },
+      );
+    } else {
+      dispatch(remove(indexInList));
+    }
+  };
+
+
   useEffect(() => {
     if (transactions.length > 0) {
-      setSum(sumTs(transactions.slice(topMostIndex)));
+      calculateAndSetTransactionsSum(transactions.slice(topMostIndex));
       setTopMostTimestamp(transactions[topMostIndex].timestamp);
     }
   }, [topMostIndex])
 
   useEffect(() => {
+    calculateAndSetTransactionsSum(transactions);
     if (transactions.length > 0) {
-      setSum(sumTs(transactions));
       setTopMostTimestamp(transactions[0].timestamp);
-    }
+    } 
   }, [transactions])
 
-  const sumTs = (ts: Transaction[]) => ts.map(t => t.amount).reduce((sum, amnt) => sum + amnt, 0)
 
-  const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateTimeFormatOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-  const onViewableItemsChanged = useCallback(({ viewableItems, _ }: ViewableItems) => {
+  const setIndexOfTopMostViewableTransaction = useCallback(({ viewableItems, _ }: ViewableItems) => {
     if (viewableItems.length > 0) {
       const token: ViewToken = viewableItems[0];
       setTopMostIndex(token.index!)
     }
   }, []);
 
+  if (!transactionsLoaded) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={{ display: "flex", justifyContent: "center", height: "4%", backgroundColor: "#f7f7fa" }}>
+    <View style={[css.styles.flex1, css.styles.flexColumnSpaceBetween]}>
+      <View style={[css.styles.flexColumnCenter, { height: "4%", backgroundColor: "#f7f7fa" }]}>
         {transactions.length > 0 &&
-          <Text style={{ marginLeft: "2%" }}>{new Date(topMostTimestamp).toLocaleDateString("de-DE", options)}</Text>
+          <Text style={{ marginLeft: "2%" }}>{new Date(topMostTimestamp).toLocaleDateString("de-DE", dateTimeFormatOptions)}</Text>
         }
       </View>
 
       <FlatList
-        onViewableItemsChanged={onViewableItemsChanged}
+        onViewableItemsChanged={setIndexOfTopMostViewableTransaction}
         data={transactions}
         renderItem={(item: ListRenderItemInfo<Transaction>) => {
           const trans = item.item;
@@ -82,7 +101,7 @@ export default function TransactionOverview({ route, navigation }: OverviewScree
               rightContent={
                 <Button
                   title="Delete"
-                  onPress={() => { dispatch(remove(item.index)); }}
+                  onPress={() => { deleteTransaction(item); }}
                   icon={{ name: 'delete', color: 'white' }}
                   buttonStyle={{ minHeight: '100%', backgroundColor: 'red' }}
                 />
@@ -99,7 +118,7 @@ export default function TransactionOverview({ route, navigation }: OverviewScree
           )
         }} />
 
-      <View style={{ alignItems: "center" }}>
+      <View style={css.styles.alignItemsCenter}>
         <Button
           title={`${sum} €`}
           titleStyle={{ fontWeight: '700' }}
@@ -115,7 +134,7 @@ export default function TransactionOverview({ route, navigation }: OverviewScree
           }}
         />
 
-        <View style={styles.fixToText}>
+        <View style={[css.styles.flexRowSpaceEvenly, styles.widthAndMargin]}>
 
           <FAB
             icon={{ name: 'add', color: 'white' }}
@@ -139,19 +158,12 @@ export default function TransactionOverview({ route, navigation }: OverviewScree
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: 'space-between',
-  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
   },
-  fixToText: {
+  widthAndMargin: {
     width: "50%",
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
     marginBottom: 20
   },
 });
